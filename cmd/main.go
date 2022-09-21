@@ -17,11 +17,11 @@ import (
 )
 
 var (
-	Version   string
-	BuildDate string
-	GitCommit string
-	GitBranch string
-	GoVersion string
+	version   string
+	buildDate string
+	gitCommit string
+	gitBranch string
+	goVersion string
 
 	displayVersion bool
 	logLevel       *zapcore.Level
@@ -50,18 +50,18 @@ func handleSignals(cancel context.CancelFunc, logger *zap.Logger) {
 }
 
 func doDisplayVersion() {
-	fmt.Printf("Version: %s\n", Version)
-	if GitCommit != "" {
-		fmt.Printf("Git hash: %s\n", GitCommit)
+	fmt.Printf("Version: %s\n", version)
+	if gitCommit != "" {
+		fmt.Printf("Git hash: %s\n", gitCommit)
 	}
-	if GitBranch != "" {
-		fmt.Printf("Git branch: %s\n", GitBranch)
+	if gitBranch != "" {
+		fmt.Printf("Git branch: %s\n", gitBranch)
 	}
-	if BuildDate != "" {
-		fmt.Printf("Build date: %s\n", BuildDate)
+	if buildDate != "" {
+		fmt.Printf("Build date: %s\n", buildDate)
 	}
-	if GoVersion != "" {
-		fmt.Printf("Go Version: %s\n", GoVersion)
+	if goVersion != "" {
+		fmt.Printf("Go Version: %s\n", goVersion)
 	}
 	os.Exit(0)
 }
