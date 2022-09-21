@@ -1,0 +1,64 @@
+before:
+  hooks:
+    - go mod tidy
+builds:
+
+- id: "channelz-proxy"
+  main: cmd/channelz-proxy/main.go
+  binary: channelz-proxy
+  env:
+    - CGO_ENABLED=0
+  ldflags:
+    - -X 'main.goVersion={{.Env.GO_VERSION}}' -X main.gitCommit={{.Commit}} -X main.gitBranch={{.Tag}} -X main.buildDate={{.Date}} -X main.version={{.Version}}
+  goos:
+    - darwin
+    - linux
+  goarch:
+    - amd64
+
+archives:
+- id: channelz-proxy
+  files:
+    - README.md
+    - LICENSE
+  name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+
+dockers:
+  - image_templates:
+    - "bonnefoa/channelz-proxy:{{ .Tag }}"
+    - "bonnefoa/channelz-proxy:v{{ .Major }}"
+    - "bonnefoa/channelz-proxy:v{{ .Major }}.{{ .Minor }}"
+    - "bonnefoa/channelz-proxy:latest"
+    dockerfile: Dockerfile.goreleaser
+    goos: linux
+    goarch: amd64
+    build_flag_templates:
+      - --label=org.opencontainers.image.title={{ .ProjectName }}
+      - --label=org.opencontainers.image.description={{ .ProjectName }}
+      - --label=org.opencontainers.image.url=https://github.com/bonnefoa/channelz-proxy
+      - --label=org.opencontainers.image.source=https://github.com/bonnefoa/channelz-proxy
+      - --label=org.opencontainers.image.version={{ .Version }}
+      - --label=org.opencontainers.image.created={{ time "2006-01-02T15:04:05Z07:00" }}
+      - --label=org.opencontainers.image.revision={{ .FullCommit }}
+      - --label=org.opencontainers.image.licenses=MIT
+
+checksum:
+  name_template: "{{ .ProjectName }}_checksums.txt"
+  algorithm: sha256
+snapshot:
+  name_template: "{{ .Tag }}-next"
+release:
+  github:
+    owner: bonnefoa
+    name: channelz-proxy
+  draft: false
+  prerelease: auto
+  name_template: "v{{.Version}}"
+  disable: false
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+    - '^docs:'
+    - '^test:'
