@@ -4,7 +4,7 @@ before:
 builds:
 
 - id: "channelz-proxy"
-  main: cmd/channelz-proxy/main.go
+  main: cmd/main.go
   binary: channelz-proxy
   env:
     - CGO_ENABLED=0
