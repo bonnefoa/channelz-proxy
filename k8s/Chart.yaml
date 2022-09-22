@@ -1,0 +1,4 @@
+apiVersion: v2
+name: channelz-proxy
+description: Chart for channelz-proxy
+version: 0.1.0

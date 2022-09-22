@@ -1,0 +1,14 @@
+port: 8080
+
+docker:
+  pullPolicy: IfNotPresent
+
+image:
+  channelz_proxy:
+    name: bonnefoa/channelz-proxy
+    tag: v0.0.1
+
+resources:
+  channelz_proxy:
+    memory: 0.5G
+    cpu: 1

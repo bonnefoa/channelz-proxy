@@ -26,14 +26,14 @@ var (
 	displayVersion bool
 	logLevel       *zapcore.Level
 
-	address           string
+	listenAddress     string
 	testServerAddress string
 )
 
 func setCliFlags() {
 	logLevel = zap.LevelFlag("log-level", zap.InfoLevel, "the log level")
 	flag.BoolVar(&displayVersion, "version", false, "Display version and exit")
-	flag.StringVar(&address, "address", "localhost:8080", "Address for listener")
+	flag.StringVar(&listenAddress, "listen-address", "localhost:8080", "Address for listener")
 	flag.StringVar(&testServerAddress, "test-server-address", "", "Address for test grpc server")
 }
 
@@ -93,12 +93,11 @@ func start() {
 		go grpc.StartTestClients(ctx, logger, testServerAddress)
 	}
 
-	web.StartServer(ctx, address, logger)
+	web.StartServer(ctx, listenAddress, logger)
 }
 
 func main() {
 	setCliFlags()
 	flag.Parse()
-
 	start()
 }
