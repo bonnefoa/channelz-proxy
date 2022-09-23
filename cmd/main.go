@@ -24,6 +24,7 @@ var (
 	goVersion string
 
 	displayVersion bool
+	httpDebug      bool
 	logLevel       *zapcore.Level
 
 	listenAddress     string
@@ -33,6 +34,7 @@ var (
 func setCliFlags() {
 	logLevel = zap.LevelFlag("log-level", zap.InfoLevel, "the log level")
 	flag.BoolVar(&displayVersion, "version", false, "Display version and exit")
+	flag.BoolVar(&httpDebug, "http-debug", false, "Activate http debug")
 	flag.StringVar(&listenAddress, "listen-address", "localhost:8080", "Address for listener")
 	flag.StringVar(&testServerAddress, "test-server-address", "", "Address for test grpc server")
 }
@@ -73,7 +75,7 @@ func configureLogs() *zap.Logger {
 	logger, err := logConfig.Build()
 	util.FatalIf(err)
 
-	if logConfig.Level.Level() == zap.DebugLevel {
+	if httpDebug {
 		gin.SetMode(gin.DebugMode)
 	} else {
 		gin.SetMode(gin.ReleaseMode)
