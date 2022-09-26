@@ -11,8 +11,6 @@ import (
 	"github.com/bonnefoa/channelz/channelz-proxy/pkg/grpc"
 	"go.uber.org/zap"
 
-	channelzgrpc "google.golang.org/grpc/channelz/grpc_channelz_v1"
-
 	"github.com/gin-gonic/gin"
 )
 
@@ -106,9 +104,6 @@ func (s *ChannelzProxyRoutes) channelsRoute(c *gin.Context) {
 		errMsg := fmt.Sprintf("Error getting channels: %s", err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{"error": errMsg})
 		return
-	}
-	if channels == nil {
-		channels = []*channelzgrpc.Channel{}
 	}
 	c.JSON(http.StatusOK, gin.H{"data": channels})
 }

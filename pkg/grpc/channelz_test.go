@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	channelz "google.golang.org/grpc/channelz/service"
 	"google.golang.org/grpc/reflection"
@@ -29,19 +28,4 @@ func createTestGrpcServer(t *testing.T, ctx context.Context) {
 		err = channelzServer.Serve(channelzListener)
 		assert.NoError(t, err, "Channel Serve")
 	}()
-}
-
-func TestGetTopChannels(t *testing.T) {
-	logger, err := zap.NewDevelopment()
-	assert.NoError(t, err, "zap")
-
-	ctx, cancel := context.WithCancel(context.Background())
-	createTestGrpcServer(t, ctx)
-
-	c := NewChannelzProxyServer(logger)
-
-	channels, err := c.GetTopChannels(ctx, "localhost:7654", 0)
-	assert.NoError(t, err, "GetTopChannels")
-	assert.Equal(t, len(channels), 1)
-	cancel()
 }

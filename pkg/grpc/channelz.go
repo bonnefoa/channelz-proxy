@@ -55,34 +55,6 @@ func (c *ChannelzProxyServer) GetServers(ctx context.Context, address string, st
 	return resp.Server, nil
 }
 
-func (c *ChannelzProxyServer) GetTopChannels(ctx context.Context, address string, startChannelId int64) ([]*channelzgrpc.Channel, error) {
-	clt, err := c.getChannelClient(address)
-	if err != nil {
-		return nil, err
-	}
-	req := &channelzgrpc.GetTopChannelsRequest{StartChannelId: startChannelId}
-	resp, err := clt.GetTopChannels(ctx, req)
-	if err != nil {
-		c.logger.Warn("Error getting top channels", zap.Error(err))
-		return nil, err
-	}
-	return resp.Channel, nil
-}
-
-func (c *ChannelzProxyServer) GetChannel(ctx context.Context, address string, channelId int64) (*channelzgrpc.Channel, error) {
-	clt, err := c.getChannelClient(address)
-	if err != nil {
-		return nil, err
-	}
-	req := &channelzgrpc.GetChannelRequest{ChannelId: channelId}
-	resp, err := clt.GetChannel(ctx, req)
-	if err != nil {
-		c.logger.Warn("Error getting top channels", zap.Error(err))
-		return nil, err
-	}
-	return resp.Channel, nil
-}
-
 func (c *ChannelzProxyServer) getServerSocketIds(ctx context.Context, clt channelzgrpc.ChannelzClient, serverId int64, startSocketId int64) ([]int64, error) {
 	socketIds := make([]int64, 0)
 	currentStart := startSocketId
@@ -143,18 +115,4 @@ func (c *ChannelzProxyServer) GetSocket(ctx context.Context, address string, soc
 		return nil, err
 	}
 	return resp.Socket, nil
-}
-
-func (c *ChannelzProxyServer) GetSubchannel(ctx context.Context, address string, subchannelId int64) (*channelzgrpc.Subchannel, error) {
-	clt, err := c.getChannelClient(address)
-	if err != nil {
-		return nil, err
-	}
-	req := &channelzgrpc.GetSubchannelRequest{SubchannelId: subchannelId}
-	resp, err := clt.GetSubchannel(ctx, req)
-	if err != nil {
-		c.logger.Warn("Error getting top channels", zap.Error(err))
-		return nil, err
-	}
-	return resp.Subchannel, nil
 }
