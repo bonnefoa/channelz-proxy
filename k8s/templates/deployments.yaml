@@ -43,7 +43,10 @@ spec:
           - containerPort: {{ $.Values.port }}
         args:
           - --log-level=info
-          - --listen-address=localhost:{{ $.Values.port }}
+          - --listen-address=:{{ $.Values.port }}
         {{ if $.Values.http_debug }}
           - --http-debug
+        {{- end }}
+        {{ if $.Values.test_server }}
+          - --test-server-address=localhost:3333
         {{- end }}

@@ -1,5 +1,6 @@
-port: 8080
+port: 80
 http_debug: true
+test_server: false
 
 docker:
   pullPolicy: IfNotPresent
