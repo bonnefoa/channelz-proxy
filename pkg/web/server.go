@@ -40,7 +40,9 @@ func setupRouter(logger *zap.Logger) *gin.Engine {
 	api := router.Group("/api")
 	{
 		api.GET("/channel", c.channelRoute)
+		api.GET("/channelSubchannels", c.channelSubchannelsRoute)
 		api.GET("/subchannel", c.subchannelRoute)
+		api.GET("/subchannels", c.subchannelsRoute)
 		api.GET("/socket", c.socketRoute)
 		api.GET("/channels", c.channelsRoute)
 		api.GET("/servers", c.serversRoute)

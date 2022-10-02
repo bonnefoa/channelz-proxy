@@ -10,7 +10,7 @@ import (
 
 type ChannelResult struct {
 	*channelzgrpc.Channel
-	LbPolicy string
+	LbPolicy string `json:"lb_policy"`
 }
 
 func extractLbPolicyFromEvents(events []*channelzgrpc.ChannelTraceEvent) string {
@@ -78,4 +78,22 @@ func (c *ChannelzProxyServer) GetSubchannel(ctx context.Context, address string,
 		return nil, err
 	}
 	return resp.Subchannel, nil
+}
+
+func (c *ChannelzProxyServer) GetSubchannels(ctx context.Context, address string, subchannelIds []int64) ([]*channelzgrpc.Subchannel, error) {
+	clt, err := c.getChannelClient(address)
+	if err != nil {
+		return nil, err
+	}
+	res := make([]*channelzgrpc.Subchannel, 0)
+	for _, subchannelId := range subchannelIds {
+		req := &channelzgrpc.GetSubchannelRequest{SubchannelId: subchannelId}
+		resp, err := clt.GetSubchannel(ctx, req)
+		if err != nil {
+			c.logger.Warn("Error getting top channels", zap.Error(err))
+			return nil, err
+		}
+		res = append(res, resp.Subchannel)
+	}
+	return res, nil
 }

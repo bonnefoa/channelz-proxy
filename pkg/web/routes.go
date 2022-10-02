@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/bonnefoa/channelz/channelz-proxy/pkg/grpc"
@@ -60,6 +61,79 @@ func (s *ChannelzProxyRoutes) channelRoute(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"data": channel})
+}
+
+// Get states of all subchannels of a channel
+func (s *ChannelzProxyRoutes) channelSubchannelsRoute(c *gin.Context) {
+	host, err := s.getHost(c)
+	if err != nil {
+		return
+	}
+	channelId, err := strconv.Atoi(c.DefaultQuery("channelId", "0"))
+	if err != nil {
+		errMsg := fmt.Sprintf("channelId should be an int: %s", err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": errMsg})
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*20)
+	defer cancel()
+
+	channel, err := s.c.GetChannel(ctx, host, int64(channelId))
+	if err != nil {
+		errMsg := fmt.Sprintf("Error getting subchannel: %s", err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": errMsg})
+		return
+	}
+
+	subchannelIds := make([]int64, 0)
+	for _, subchannelRef := range channel.SubchannelRef {
+		subchannelIds = append(subchannelIds, subchannelRef.SubchannelId)
+	}
+
+	subchannels, err := s.c.GetSubchannels(ctx, host, subchannelIds)
+	if err != nil {
+		errMsg := fmt.Sprintf("Error getting subchannel: %s", err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": errMsg})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": subchannels})
+}
+
+func (s *ChannelzProxyRoutes) subchannelsRoute(c *gin.Context) {
+	host, err := s.getHost(c)
+	if err != nil {
+		return
+	}
+	subchannelIdsQuery := c.Query("subchannelIds")
+	if subchannelIdsQuery == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing subchannelIds parameter"})
+		return
+	}
+	subchannelIdsStr := strings.Split(subchannelIdsQuery, ",")
+	subchannelIds := make([]int64, 0)
+	for _, subchannelIdStr := range subchannelIdsStr {
+		subchannelId, err := strconv.Atoi(subchannelIdStr)
+		if err != nil {
+			errMsg := fmt.Sprintf("subchannelId should be an int: %s", err.Error())
+			c.JSON(http.StatusBadRequest, gin.H{"error": errMsg})
+			return
+		}
+		subchannelIds = append(subchannelIds, int64(subchannelId))
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*20)
+	defer cancel()
+
+	subchannels, err := s.c.GetSubchannels(ctx, host, subchannelIds)
+	if err != nil {
+		errMsg := fmt.Sprintf("Error getting subchannel: %s", err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": errMsg})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": subchannels})
 }
 
 func (s *ChannelzProxyRoutes) subchannelRoute(c *gin.Context) {
