@@ -3,13 +3,13 @@ package web
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/bonnefoa/channelz/channelz-proxy/pkg/grpc"
+	"github.com/bonnefoa/channelz/channelz-proxy/pkg/util"
 	"go.uber.org/zap"
 
 	"github.com/gin-gonic/gin"
@@ -30,7 +30,7 @@ func NewChannelzProxyRoutes(logger *zap.Logger) *ChannelzProxyRoutes {
 func (s *ChannelzProxyRoutes) getHost(c *gin.Context) (string, error) {
 	host, hasHost := c.GetQuery("host")
 	if !hasHost {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Missing host parameter"})
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Missing host parameter"})
 		return "", errors.New("Missing host parameter")
 	}
 	return host, nil
@@ -47,8 +47,9 @@ func (s *ChannelzProxyRoutes) channelRoute(c *gin.Context) {
 	}
 	channelId, err := strconv.Atoi(c.DefaultQuery("channelId", "0"))
 	if err != nil {
-		errMsg := fmt.Sprintf("channelId should be an int: %s", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": errMsg})
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "channelId should be an int",
+			"details": err.Error()})
 		return
 	}
 
@@ -56,8 +57,7 @@ func (s *ChannelzProxyRoutes) channelRoute(c *gin.Context) {
 	defer cancel()
 	channel, err := s.c.GetChannel(ctx, host, int64(channelId))
 	if err != nil {
-		errMsg := fmt.Sprintf("Error getting channel: %s", err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"error": errMsg})
+		c.JSON(http.StatusInternalServerError, util.FormatGrpcError(err))
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"data": channel})
@@ -71,8 +71,9 @@ func (s *ChannelzProxyRoutes) channelSubchannelsRoute(c *gin.Context) {
 	}
 	channelId, err := strconv.Atoi(c.DefaultQuery("channelId", "0"))
 	if err != nil {
-		errMsg := fmt.Sprintf("channelId should be an int: %s", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": errMsg})
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "channelId should be an int",
+			"details": err.Error()})
 		return
 	}
 
@@ -81,8 +82,7 @@ func (s *ChannelzProxyRoutes) channelSubchannelsRoute(c *gin.Context) {
 
 	channel, err := s.c.GetChannel(ctx, host, int64(channelId))
 	if err != nil {
-		errMsg := fmt.Sprintf("Error getting subchannel: %s", err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"error": errMsg})
+		c.JSON(http.StatusInternalServerError, util.FormatGrpcError(err))
 		return
 	}
 
@@ -93,8 +93,7 @@ func (s *ChannelzProxyRoutes) channelSubchannelsRoute(c *gin.Context) {
 
 	subchannels, err := s.c.GetSubchannels(ctx, host, subchannelIds)
 	if err != nil {
-		errMsg := fmt.Sprintf("Error getting subchannel: %s", err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"error": errMsg})
+		c.JSON(http.StatusInternalServerError, util.FormatGrpcError(err))
 		return
 	}
 
@@ -116,8 +115,10 @@ func (s *ChannelzProxyRoutes) subchannelsRoute(c *gin.Context) {
 	for _, subchannelIdStr := range subchannelIdsStr {
 		subchannelId, err := strconv.Atoi(subchannelIdStr)
 		if err != nil {
-			errMsg := fmt.Sprintf("subchannelId should be an int: %s", err.Error())
-			c.JSON(http.StatusBadRequest, gin.H{"error": errMsg})
+			c.JSON(http.StatusBadRequest, gin.H{
+				"message": "subchannelId should be an int",
+				"details": err.Error(),
+			})
 			return
 		}
 		subchannelIds = append(subchannelIds, int64(subchannelId))
@@ -128,8 +129,7 @@ func (s *ChannelzProxyRoutes) subchannelsRoute(c *gin.Context) {
 
 	subchannels, err := s.c.GetSubchannels(ctx, host, subchannelIds)
 	if err != nil {
-		errMsg := fmt.Sprintf("Error getting subchannel: %s", err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"error": errMsg})
+		c.JSON(http.StatusInternalServerError, util.FormatGrpcError(err))
 		return
 	}
 
@@ -143,8 +143,9 @@ func (s *ChannelzProxyRoutes) subchannelRoute(c *gin.Context) {
 	}
 	channelId, err := strconv.Atoi(c.DefaultQuery("subchannelId", "0"))
 	if err != nil {
-		errMsg := fmt.Sprintf("channelId should be an int: %s", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": errMsg})
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "channelId should be an int",
+			"details": err.Error()})
 		return
 	}
 
@@ -152,8 +153,9 @@ func (s *ChannelzProxyRoutes) subchannelRoute(c *gin.Context) {
 	defer cancel()
 	subchannel, err := s.c.GetSubchannel(ctx, host, int64(channelId))
 	if err != nil {
-		errMsg := fmt.Sprintf("Error getting subchannel: %s", err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"error": errMsg})
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Error getting subchannel",
+			"details": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"data": subchannel})
@@ -166,8 +168,9 @@ func (s *ChannelzProxyRoutes) channelsRoute(c *gin.Context) {
 	}
 	startId, err := strconv.Atoi(c.DefaultQuery("startId", "0"))
 	if err != nil {
-		errMsg := fmt.Sprintf("startId should be an int: %s", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": errMsg})
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "startId should be an int",
+			"details": err.Error()})
 		return
 	}
 
@@ -175,8 +178,7 @@ func (s *ChannelzProxyRoutes) channelsRoute(c *gin.Context) {
 	defer cancel()
 	channels, err := s.c.GetTopChannels(ctx, host, int64(startId))
 	if err != nil {
-		errMsg := fmt.Sprintf("Error getting channels: %s", err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"error": errMsg})
+		c.JSON(http.StatusInternalServerError, util.FormatGrpcError(err))
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"data": channels})
@@ -189,8 +191,9 @@ func (s *ChannelzProxyRoutes) socketRoute(c *gin.Context) {
 	}
 	socketId, err := strconv.Atoi(c.DefaultQuery("socketId", "0"))
 	if err != nil {
-		errMsg := fmt.Sprintf("socketId should be an int: %s", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": errMsg})
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "socketId should be an int",
+			"details": err.Error()})
 		return
 	}
 
@@ -198,8 +201,9 @@ func (s *ChannelzProxyRoutes) socketRoute(c *gin.Context) {
 	defer cancel()
 	channels, err := s.c.GetSocket(ctx, host, int64(socketId))
 	if err != nil {
-		errMsg := fmt.Sprintf("Error getting channels: %s", err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"error": errMsg})
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Error getting channels",
+			"details": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"data": channels})
@@ -212,16 +216,18 @@ func (s *ChannelzProxyRoutes) serversRoute(c *gin.Context) {
 	}
 	startId, err := strconv.Atoi(c.DefaultQuery("startId", "0"))
 	if err != nil {
-		errMsg := fmt.Sprintf("startId should be an int: %s", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": errMsg})
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "startId should be an int",
+			"details": err.Error()})
 		return
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 	servers, err := s.c.GetServers(ctx, host, int64(startId))
 	if err != nil {
-		errMsg := fmt.Sprintf("Error getting servers: %s", err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"error": errMsg})
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Error getting servers",
+			"details": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"data": servers})
@@ -234,15 +240,17 @@ func (s *ChannelzProxyRoutes) serverSocketsRoute(c *gin.Context) {
 	}
 	serverId, err := strconv.Atoi(c.DefaultQuery("serverId", "0"))
 	if err != nil {
-		errMsg := fmt.Sprintf("serverId should be an int: %s", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": errMsg})
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "serverId should be an int",
+			"details": err.Error()})
 		return
 	}
 
 	startSocketId, err := strconv.Atoi(c.DefaultQuery("startSocketId", "0"))
 	if err != nil {
-		errMsg := fmt.Sprintf("startSocketId should be an int: %s", err.Error())
-		c.JSON(http.StatusBadRequest, gin.H{"error": errMsg})
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "startSocketId should be an int",
+			"details": err.Error()})
 		return
 	}
 
@@ -250,8 +258,9 @@ func (s *ChannelzProxyRoutes) serverSocketsRoute(c *gin.Context) {
 	defer cancel()
 	sockets, err := s.c.GetServerSockets(ctx, host, int64(serverId), int64(startSocketId))
 	if err != nil {
-		errMsg := fmt.Sprintf("Error getting server sockets: %s", err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"error": errMsg})
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Error getting server sockets",
+			"details": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"data": sockets})
